@@ -34,19 +34,25 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         let fileManager = NSFileManager.defaultManager()
         switch panel.runModal() {
         case NSModalResponseOK:
-            do {
                 _allInfoDict.removeAll()
+        
                 if let url = panel.URLs.first {
-                
-                    let files = try fileManager.contentsOfDirectoryAtURL(url, includingPropertiesForKeys: nil, options: NSDirectoryEnumerationOptions.SkipsSubdirectoryDescendants)
-                    let pListFiles = files.filter{ $0.pathExtension?.caseInsensitiveCompare("plist") ==  .OrderedSame }
-                    for filePath in pListFiles {
-                        
-                        if let pListData = NSMutableDictionary(contentsOfURL: filePath) {
+                    if let enumerator = fileManager.enumeratorAtURL(url, includingPropertiesForKeys: nil, options: [.SkipsPackageDescendants, .SkipsHiddenFiles], errorHandler: nil) {
+                        var pListFiles = [NSURL]()
+                        while let file = enumerator.nextObject() as? NSURL{
+                            if file.pathExtension?.caseInsensitiveCompare("plist") ==  .OrderedSame {
+                                pListFiles.append(file)
+                            }
+                        }
+
+                        for filePath in pListFiles {
+                            
+                            if let pListData = NSMutableDictionary(contentsOfURL: filePath) {
                                 _pListDict[filePath] = pListData
                                 appendInfoDict(pListData, fileURL: filePath)
+                            }
+                            
                         }
-                        
                     }
    
                 }
@@ -56,9 +62,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
                 switch alert.runModal() {
                     default:_tableView.reloadData()
                 }
-            } catch {
-                
-            }          
+       
         default:
             break
         }
