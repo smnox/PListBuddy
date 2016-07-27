@@ -30,31 +30,32 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
+        panel.allowsMultipleSelection = true
         let fileManager = NSFileManager.defaultManager()
         switch panel.runModal() {
         case NSModalResponseOK:
                 _allInfoDict.removeAll()
-        
-                if let url = panel.URLs.first {
+                var pListFiles = [NSURL]()
+                
+                for url in panel.URLs {
                     if let enumerator = fileManager.enumeratorAtURL(url, includingPropertiesForKeys: nil, options: [.SkipsPackageDescendants, .SkipsHiddenFiles], errorHandler: nil) {
-                        var pListFiles = [NSURL]()
+                        
                         while let file = enumerator.nextObject() as? NSURL{
                             if file.pathExtension?.caseInsensitiveCompare("plist") ==  .OrderedSame {
                                 pListFiles.append(file)
                             }
                         }
-
-                        for filePath in pListFiles {
-                            
-                            if let pListData = NSMutableDictionary(contentsOfURL: filePath) {
-                                _pListDict[filePath] = pListData
-                                appendInfoDict(pListData, fileURL: filePath)
-                            }
-                            
-                        }
                     }
    
+                }
+                
+                for filePath in pListFiles {
+                    
+                    if let pListData = NSMutableDictionary(contentsOfURL: filePath) {
+                        _pListDict[filePath] = pListData
+                        appendInfoDict(pListData, fileURL: filePath)
+                    }
+                    
                 }
                 let alert = NSAlert()
                 alert.messageText = _pListDict.count > 0 ? "\(_pListDict.count) plist file located" : "No plist file can be found, please try a different location."
